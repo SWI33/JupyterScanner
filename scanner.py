@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import aiohttp
 import asyncio
 import argparse
@@ -34,6 +33,13 @@ async def check_jupyter_lab(session, ip, port):
         async with session.get(url) as response:
             if "jupyterlab" in await response.text():
                 print_green(f"Jupyter Lab instance found at IP: {ip_address}, Port: {port}")
+                banner_url = f"http://{ip_address}:{port}/lab/favicon.ico"
+                async with session.get(banner_url) as banner_response:
+                    if banner_response.status == 200:
+                        banner_data = await banner_response.read()
+                        with open("jupyter_lab_banner.ico", "wb") as banner_file:
+                            banner_file.write(banner_data)
+                        print_green("Jupyter Lab banner saved as jupyter_lab_banner.ico")
     except aiohttp.ClientError:
         pass
     except socket.gaierror:
@@ -45,7 +51,7 @@ async def scan_ip(ip_range):
     start_ip_int = int(ipaddress.IPv4Address(start_ip_str))
     end_ip_int = int(ipaddress.IPv4Address(end_ip_str))
 
-    jupyter_ports = [8888, 8889, 8890]
+    jupyter_ports = [8888, 8889, 8890, 30000]
     
     async with aiohttp.ClientSession() as session:
         tasks = []
